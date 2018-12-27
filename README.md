@@ -1,6 +1,7 @@
 ## SQL 审核 审计 执行 备份 索引优化 ，代码质量管理等。
 
 [更新日志](https://github.com/ss1917/do_mg/releases) 
+
 [在线访问](http://demo.opendevops.cn/)
 
 ### 代码质量管理
@@ -33,7 +34,12 @@
 [SonarQube 介绍 部署 配置](https://github.com/opendevops-cn/codo-check/tree/master/doc/sonarqube.md)
 
 #### 脚本部署
-**待完善**
+- 配置 settings
+- 安装依赖  pip3 install -r requirements.txt
+
+**约束**
+- 当前主机可以执行 /usr/local/sonar-scanner/bin/sonar-scanner 命令。如何部署请看部署文档
+- 当前注意可以 拉取 相关git仓库的代码。可以使用git的 deploy_keys
 ```
 
 ```

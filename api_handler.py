@@ -10,7 +10,8 @@ Desc    :
 import pyotp
 import requests
 import json
-from .settings import api_settings
+from settings import api_settings
+
 
 
 class API(object):
@@ -18,9 +19,10 @@ class API(object):
         self.url = api_settings['api_gw']
         self.user = api_settings['api_user']
         self.pwd = api_settings['api_pwd']
-        self.key = api_settings.get('api_user_mfa')
+        self.key = api_settings.get('api_key')
         self.login_api = api_settings.get('login_api')
         self.publish_info_api = api_settings.get('publish_info_api')
+        self.get_key_api = api_settings.get('get_key_api')
         self.mail_api = api_settings.get('mail_api')
 
     @property
@@ -74,9 +76,20 @@ class API(object):
         except Exception as e:
             print(e)
             token = self.login()
-        req1 = requests.get('', cookies=dict(auth_key=token))
-        csrf_key = json.loads(req1.text)['csrf_key']
+
+        req1 = requests.get(self.get_key_api, cookies=dict(auth_key=token))
+        if req1.status_code != 200:
+            raise SystemExit(req1.status_code)
+
+        ret1 = json.loads(req1.text)
+        if ret1['code'] == 0:
+            csrf_key = ret1['csrf_key']
+        else:
+            raise SystemExit(ret1['code'])
+
         body = json.dumps({"to_list": mail_list, "subject": mail_subject, "content": mail_content, "subtype": "plain"})
         res = requests.post(self.mail_api, data=body, cookies=dict(auth_key=token, csrf_key=csrf_key))
-        ret = json.loads(res.content)
-        if ret['code'] == 0: return ret['data']
+        if res.status_code != 200:
+            raise SystemExit(res.status_code)
+        else:
+            return json.loads(res.text)['msg']
