@@ -13,23 +13,14 @@ import subprocess
 from settings import sonar_info
 from api_handler import API
 
-mail_dict = dict()
-
-mail_addr = {}
-
-try:
-    from settings import *
-except:
-    pass
-
 
 def get_config_info(publish_name):
     obj = API()
     result = obj.get_publish_name_info(publish_name)
-    return result[0]['repository']
+    return result[0]['repository'], result[0]['mail_to']
 
 
-def exec_sonar_v2(publish_name, git_repository, publish_tag):
+def exec_sonar_v2(publish_name, git_repository, publish_tag, mail_to):
     app_name = git_repository.split('/')[-1].replace(".git", "")
     print(app_name)
     ### 删除已经存在的，然后创建
@@ -67,7 +58,6 @@ def exec_sonar_v2(publish_name, git_repository, publish_tag):
     for i in stdout.decode('utf-8').split('\n'):
         print(i)
 
-    mail_to = mail_dict.get(publish_name, '191715030@qq.com')
     print("mail_to: ", mail_to)
     msg = "代码检查完毕！\n项目：{}\n应用：{}\n标签：{}\n用户名: shinezone \n密码：shinezone \n详情：{}{}".format(
         publish_name, app_name, publish_tag, sonar_info.get('sonar_domain'), app_name)
@@ -83,9 +73,9 @@ def main(publish_name, publish_tag):
         print("[Error:] PUBLISH_NAME PUBLISH_TAG 不能为空")
         exit(-1)
 
-    git_repository = get_config_info(publish_name)
+    git_repository, mail_to = get_config_info(publish_name)
     if git_repository:
-        exec_sonar_v2(publish_name, git_repository, publish_tag)
+        exec_sonar_v2(publish_name, git_repository, publish_tag, mail_to)
     else:
         print('[Error:] git repository is none !!!')
 

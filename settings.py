@@ -36,5 +36,3 @@ sonar_info =dict(
     sonar_login =sonar_login,
     sonar_domain = sonar_domain
 )
-### 代码检查发送邮件  首先从api获取，如果获取不到,再配置获取
-mail_to_dict = {"shenshuo_server-test": "191715030@qq.com.com"}

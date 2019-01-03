@@ -29,20 +29,22 @@
 #### 简介
 **SonarQube 是一个开源的代码分析平台, 用来持续分析和评测项目源代码的质量。 通过SonarQube我们可以检测出项目中重复代码， 潜在bug， 代码风格问题，缺乏单元测试等问题， 并通过一个web ui展示出来**
 
-#### 项目部署
+#### 环境部署
 
 [SonarQube 介绍 部署 配置](https://github.com/opendevops-cn/codo-check/tree/master/doc/sonarqube.md)
 
 #### 脚本部署
+
+- 脚本下载
+  ```
+  mkdir -p  /opt/ops_scripts/ && cd  /opt/ops_scripts/ && git clone https://github.com/opendevops-cn/codo-check.git
+  ```
 - 配置 settings
 - 安装依赖  pip3 install -r requirements.txt
 
 **约束**
 - 当前主机可以执行 /usr/local/sonar-scanner/bin/sonar-scanner 命令。如何部署请看部署文档
 - 当前注意可以 拉取 相关git仓库的代码。可以使用git的 deploy_keys
-```
-
-```
 
 #### 使用说明
 **待完善**
@@ -61,12 +63,25 @@
 例行 SQL 优化，不仅可以提升程序性能，还能够降低线上故障的概率。
 目前常用的 SQL 优化方式包括但不限于：业务层优化、SQL逻辑优化、索引优化等。其中索引优化通常通过调整索引或新增索引从而达到 SQL 优化的目的。索引优化往往可以在短时间内产生非常巨大的效果。如果能够将索引优化转化成工具化、标准化的流程，减少人工介入的工作量，无疑会大大提高的工作效率。
 ```
-#### 部署
-**待完善**
 
-#### 简介
+#### SQLAdvisor简介
 **SQLAdvisor 是由美团点评公司北京DBA团队开发维护的 SQL 优化工具：输入SQL，输出索引优化建议。 它基于 MySQL 原生词法解析，再结合 SQL 中的 where 条件以及字段选择度、聚合条件、多表 Join 关系等最终输出最优的索引优化建议。目前 SQLAdvisor 在公司内部大量使用，较为成熟、稳定。**
 
+#### 环境部署
+[SQLAdvisor 部署 配置](https://github.com/opendevops-cn/codo-check/tree/master/doc/SQLAdvisor.md)
+
+#### 脚本部署
+
+- 脚本下载 如果已经下载，则可以省略当前步骤
+  ```
+  mkdir -p  /opt/ops_scripts/ && cd  /opt/ops_scripts/ && git clone https://github.com/opendevops-cn/codo-check.git
+  ```
+- 配置 settings
+- 安装依赖  pip3 install -r requirements.txt
+
+**约束**
+- 当前主机可以执行 /usr/local/sonar-scanner/bin/sonar-scanner 命令。如何部署请看部署文档
+- 当前注意可以 拉取 相关git仓库的代码。可以使用git的 deploy_keys
 
 ## License
 
