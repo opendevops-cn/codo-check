@@ -69,6 +69,18 @@ class API(object):
         ret = json.loads(res.content)
         if ret['code'] == 0: return ret['data']
 
+    def get_api_info(self, api_url):
+        '''获取接口所有信息'''
+        try:
+            token = self.login()
+        except Exception as e:
+            print(e)
+            token = self.login()
+
+        res = requests.get(api_url, cookies=dict(auth_key=token))
+        ret = json.loads(res.content)
+        return ret['data']
+
     def send_mail_for_api(self, mail_list, mail_subject, mail_content):
         """发送邮件"""
         try:
