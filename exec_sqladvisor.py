@@ -54,7 +54,6 @@ def exec_sqladvisor_v2(db_name, conf_file, sqls, mail_to):
 
             res = obj.send_mail_for_api(mail_to, 'SQL索引优化', msg)
             print(res)
-            print("successful")
 
 
 def main(publish_name, db_name, sqls):
@@ -75,6 +74,7 @@ def main(publish_name, db_name, sqls):
                 db_info = db['db_info']
                 conf_file = get_conf(db_name, db_info)
                 exec_sqladvisor_v2(db_name, conf_file, sqls, mail_to)
+        print("successful")
     else:
         print('[Error:] git repository is none !!!')
 
