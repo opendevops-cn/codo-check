@@ -20,13 +20,12 @@ import subprocess
 import warnings
 import socket
 import re
+from api_handler import API
 
 warnings.filterwarnings('ignore')
 import pymysql
 
-### 必填 可以从api获取
-git_domain = ''
-git_ssh = "git@{}".format(git_domain)
+
 
 def _is_ip(value):
     """检测是否是IP"""
@@ -45,7 +44,7 @@ def conver_url2ip(db_host):
 
 def get_conf(db_info):
     """获取SQL配置生产配置文件"""
-    db_mark, db_host, db_port, db_user, db_pwd = str(base64.b64decode(db_info), "utf-8").split(',,')
+    db_host, db_port, db_user, db_pwd = str(base64.b64decode(db_info), 'utf-8').split(',,,')
     db_host = conver_url2ip(db_host)
     if db_pwd == 'null':
         db_pwd = ''
@@ -57,20 +56,21 @@ def get_conf(db_info):
 
 
 def get_sql(db_file):
-    gitlab = db_file.split(str(git_domain))
+    gitlab = db_file.split('blob')
     if len(gitlab) != 2:
         return -1, '请输入正确的文件名'
 
-    git_group = gitlab[1].split('blob')[0].split('/')
-    git_branch = gitlab[1].split('blob')[1].split('/')[1]
-    git_url = '{}:{}/{}.git'.format(git_ssh, git_group[1], git_group[2])
-    ###
-    cmd1 = 'mkdir -p /tmp/codes/ && cd /tmp/codes/ && rm -rf {} && git clone {} && cd {} && git checkout {}'.format(
-        git_group[2], git_url, git_group[2], git_branch)
-    sql_file = '/tmp/codes/{}/{}'.format(git_group[2], gitlab[1].split('blob')[1].replace('/' + git_branch + '/', ''))
-    sub1 = subprocess.Popen(cmd1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    stdout, stderr = sub1.communicate()
-    ret = sub1.returncode
+    db_file_list = db_file.split('/')
+    git_domain, git_group, git_app, git_branch = db_file_list[2], db_file_list[3], db_file_list[4], db_file_list[6]
+    git_url = 'git@{}:{}/{}.git'.format(git_domain, git_group, git_app)
+    print('db file path is',git_url)
+    sql_file = '/tmp/codes/{}/{}'.format(git_app, db_file.split('blob')[1].replace('/' + git_branch + '/', ''))
+    cmd = 'mkdir -p /tmp/codes/ && cd /tmp/codes/ && rm -rf {} && git clone {} && cd {} && git checkout {}'.format(
+        git_app, git_url, git_app, git_branch)
+
+    sub = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    stdout, stderr = sub.communicate()
+    ret = sub.returncode
     if ret == 0:
         with open(sql_file, "r") as f1:
             return 0, f1.read()
@@ -78,12 +78,11 @@ def get_sql(db_file):
         return -1, stderr
 
 
-def exec_inception(mark, db_info, db_file):
-    print(mark)
-    ### 获取要执行的SQL
+def exec_inception_v2(db_info, db_file):
+    # ### 获取要执行的SQL
     exec_code, exec_sql = get_sql(db_file)
     if exec_code != 0:
-        print(exec_sql)
+        print(db_file)
         exit(-1)
 
     # 执行还是校验
@@ -95,14 +94,12 @@ def exec_inception(mark, db_info, db_file):
 
     try:
         # 将待执行的sql语句组合成inception识别的格式
-        sql_with_format = '''/*--user={};--password={};--host={};{};--port={};*/ inception_magic_start;\n{}\ninception_magic_commit;'''.format(
+        sql_with_format = '''/*--user={};--password={};--host={};{};--port={};*/ inception_magic_start;\n {} \ninception_magic_commit;'''.format(
             connstr_target['user'],
             connstr_target['password'],
             connstr_target['host'],
             operation,
             connstr_target['port'], exec_sql)
-
-        print(exec_sql)
 
         # 连接至inception 服务器
         conn_inception = pymysql.connect(host=connstr_inception.get('host', '127.0.0.1'),
@@ -117,7 +114,7 @@ def exec_inception(mark, db_info, db_file):
         result = cur.fetchall()
         num_fields = len(cur.description)
         field_names = [i[0] for i in cur.description]
-        print(field_names)
+        # print(field_names)
         # 打印出来Inception对MySQL语句的审计结果
         result_code = []
         for row in result:
@@ -128,17 +125,32 @@ def exec_inception(mark, db_info, db_file):
         cur.close()
         conn_inception.close()
 
-        if 2 or 1 in result_code:
-            print('There is a serious error, please check the log !!!')
+        if 2 in result_code or 1 in result_code:
+            print('host:{}  error, please check the log !!!'.format(connstr_target['host']))
             exit(-1)
+        else:
+            print('host:{} success !!!'.format(connstr_target['host']))
 
     except  Exception as err:
         print(err)
         exit(-2)
     finally:
-        print('****************')
-        exit(-3)
+        print('********************')
 
+
+def main(publish_name, db_file):
+    obj = API()
+    result = obj.get_publish_name_info(publish_name)
+    publish_hosts_api, mail_to = result[0]['publish_hosts_api'], result[0]['mail_to']
+    if publish_hosts_api:
+        res = obj.get_api_info(publish_hosts_api)
+        for db in res['db_list']:
+            if db['db_type'] == 'MySQL' and db['db_role'] == 'master':
+                db_info = db['db_info']
+                exec_inception_v2(db_info, db_file)
 
 if __name__ == '__main__':
-    fire.Fire(exec_inception)
+    fire.Fire(main)
+
+
+###python3.6 /opt/ops_scripts/codo-check/exec_inception.py shenshuo_server-test http://gitlab.shinezoneserver.com/ops/123/blob/master/ss/shenyingzhi.txt
